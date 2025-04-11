@@ -3,6 +3,9 @@ workdir: /MP_Data/Dados_David/repressors_pipeline
 threads: 4
 project_name: DNA_repressores
 samples:
-    'AP1_A':
-        forward: 'data/AP1_A_R1.fastq.gz'
-        reverseR: 'data/AP1_A_R2.fastq.gz'
+    'sample_01':
+        forward: 'data/sample_01_R1.fastq'
+        reverseR: 'data/sample_01_R2.fastq'
+    'sample_02':
+        forward: 'data/sample_02_R1.fastq'
+        reverseR: 'data/sample_02_R2.fastq'

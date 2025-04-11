@@ -10,7 +10,7 @@ rule fastp:
         reverseR = lambda wildcards: os.path.abspath(config["samples"][wildcards.sample]["reverseR"])
     output:
         forward = "results/{sample}/fastp/{sample}_R1_trimmed.fastq.gz",
-        reverseR = "results/{sample}/fastp/{sample}_R2_trimmed.fastq.gz"
+        reverseR = "results/{sample}/fastp/{sample}_R2_trimmed.fastq.gz",
         report = "results/{sample}/fastp/{sample}_fastp_report.html"
     params:
         outdir = "results/{sample}/fastp"
@@ -37,7 +37,7 @@ rule bowtie:
         "benchmarks/{sample}.bowtie2.benchmark.txt"
     threads: 30
     shell:
-        f"bowtie2 -x Banco_repressor/{config['project_name']} -1 {input.forward} -2 {input.reverseR} -S {output} --very_sensitive --no-unal -p {threads} 2> {log.stderr} 1> {log.stdout}"
+        f"bowtie2 -x repressorsDB/{config['project_name']} -1 {{input.forward}} -2 {{input.reverseR}} -S {{output}} --very_sensitive --no-unal -p {{threads}} 2> {{log.stderr}} 1> {{log.stdout}}"
 
 rule samtools_view:
     input:
@@ -75,7 +75,7 @@ rule merge_idxstats:
     input:
         expand(
             f"results/{{sample}}/idxstats/{{sample}}_vs_{config['project_name']}_idxstats.txt", 
-            sample=config["sample"].keys()
+            sample=config["samples"].keys()
         )
     output:
         f"merged_output/merged_output.tsv"
