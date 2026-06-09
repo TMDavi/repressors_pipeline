@@ -71,6 +71,29 @@ rule samtools_idxstats:
     shell:
         "samtools idxstats {input} > {output}"
 
+rule genome_depth:
+    input:
+        "results/{sample}/mapped_reads/{sample}_vs_{config['project_name']}_sorted.bam"
+    output:
+        "results/{sample}/mapped_reads/{sample}_vs_{config['project_name']}_depth.tsv"
+    conda:
+        "/MP_Data/mambaforge/envs/coverm"
+    shell:
+        """
+        coverm contig -b {input} -o {output}
+        """
+
+rule calc_coverage:
+    input:
+        "results/{sample}/mapped_reads/{sample}_vs_{config['project_name']}_sorted.bam"
+    output:
+        "results/{sample}/mapped_reads/{sample}_vs_{config['project_name']}_coverage.tsv"
+    conda:
+        "/MP_Data/mambaforge/envs/bcftools"
+    shell:
+        "bedtools genomecov -ibam {input} > {output}"
+
+
 rule merge_idxstats:
     input:
         expand(
@@ -81,3 +104,25 @@ rule merge_idxstats:
         f"merged_output/merged_output.tsv"
     shell:
         "python scripts/merge_samples.py --files {input} --output {output}"
+
+rule merge_depth:
+    input:
+        expand(
+            "results/{sample}/mapped_reads/{sample}_vs_{config['project_name']}_depth.tsv", 
+            sample=config["samples"].keys()
+        )
+    output:
+        "merged_output/merged_depth.tsv"
+    shell:
+        "python scripts/merge_depth.py --files {input} --output {output}"
+
+rule merge_coverage:
+    input:
+        expand(
+            "results/{sample}/mapped_reads/{sample}_vs_{config['project_name']}_coverage.tsv", 
+            sample=config["samples"].keys()
+        )
+    output:
+        "merged_output/merged_coverage.tsv"
+    shell:
+        "python scripts/merge_coverage.py --files {input} --output {output}"
