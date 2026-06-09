@@ -2,7 +2,9 @@ configfile: 'config.yaml'
 
 rule all:
     input:
-        f"merged_output/merged_output.tsv"
+        "merged_output/merged_idxstats.tsv",
+        "merged_output/merged_depth.tsv",
+        "merged_output/merged_coverage.tsv"
 
 rule fastp:
     input:
@@ -19,6 +21,8 @@ rule fastp:
         stderr = "results/{sample}/fastp/log-stderr.txt"
     benchmark:
         "results/{sample}/fastqc/benchmark.txt"
+    conda:
+	"envs/mapping.yaml"
     threads:
         config["threads"]
     shell:
@@ -35,7 +39,9 @@ rule bowtie:
         stderr = "results/{sample}/bowtie2/log-stderr.txt"
     benchmark:
         "benchmarks/{sample}.bowtie2.benchmark.txt"
-    threads: 30
+    threads: 4
+    conda:
+	"envs/mapping.yaml"
     shell:
         f"bowtie2 -x repressorsDB/{config['project_name']} -1 {{input.forward}} -2 {{input.reverseR}} -S {{output}} --very_sensitive --no-unal -p {{threads}} 2> {{log.stderr}} 1> {{log.stdout}}"
 
@@ -44,6 +50,8 @@ rule samtools_view:
         f"results/{{sample}}/mapped_reads/{{sample}}_vs_{config['project_name']}.sam"
     output:
         f"results/{{sample}}/mapped_reads/{{sample}}_vs_{config['project_name']}.bam"
+    conda:
+	"envs/mapping.yaml"
     shell:
         "samtools view -Sb {input} > {output}"
         
@@ -52,6 +60,8 @@ rule samtools_sort:
         f"results/{{sample}}/mapped_reads/{{sample}}_vs_{config['project_name']}.bam"
     output:
         f"results/{{sample}}/mapped_reads/{{sample}}_vs_{config['project_name']}_sorted.bam"
+    conda:
+	"envs/mapping.yaml"
     shell:
         "samtools sort -o {output} {input}"
 
@@ -60,6 +70,8 @@ rule samtools_index:
         f"results/{{sample}}/mapped_reads/{{sample}}_vs_{config['project_name']}_sorted.bam"
     output:
         f"results/{{sample}}/mapped_reads/{{sample}}_vs_{config['project_name']}_sorted.bam.bai"
+    conda:
+	"envs/mapping.yaml"
     shell:
         "samtools index {input}"
 
@@ -68,6 +80,8 @@ rule samtools_idxstats:
         f"results/{{sample}}/mapped_reads/{{sample}}_vs_{config['project_name']}_sorted.bam"
     output:
         f"results/{{sample}}/idxstats/{{sample}}_vs_{config['project_name']}_idxstats.txt"
+    conda:
+	"envs/mapping.yaml"
     shell:
         "samtools idxstats {input} > {output}"
 
@@ -77,7 +91,7 @@ rule genome_depth:
     output:
         "results/{sample}/mapped_reads/{sample}_vs_{config['project_name']}_depth.tsv"
     conda:
-        "/MP_Data/mambaforge/envs/coverm"
+        "envs/coverm.yaml"
     shell:
         """
         coverm contig -b {input} -o {output}
@@ -89,7 +103,7 @@ rule calc_coverage:
     output:
         "results/{sample}/mapped_reads/{sample}_vs_{config['project_name']}_coverage.tsv"
     conda:
-        "/MP_Data/mambaforge/envs/bcftools"
+        "envs/mapping.yaml"
     shell:
         "bedtools genomecov -ibam {input} > {output}"
 
@@ -101,7 +115,7 @@ rule merge_idxstats:
             sample=config["samples"].keys()
         )
     output:
-        f"merged_output/merged_output.tsv"
+        f"merged_output/merged_idxstats.tsv"
     shell:
         "python scripts/merge_samples.py --files {input} --output {output}"
 
