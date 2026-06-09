@@ -1,0 +1,11 @@
+name: mapping
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - fastp=0.24.0
+  - bowtie2=2.5.4
+  - samtools=1.22
+  - bcftools=1.22
